@@ -1,5 +1,5 @@
 using Test
-using Problem_18_1_5
+using Homework_1
 
 @testset "Data type 'SimTriag' is defined" begin
     gd = [1, 2, 3]

@@ -1,4 +1,4 @@
-module Problem_18_1_5
+module Homework_1
 
 export SimTridiag
 
@@ -101,4 +101,4 @@ function *(T::SimTridiag, x::Matrix)
     return result
 end
 
-end # module Problem_18_1_5
+end # module Homework_1

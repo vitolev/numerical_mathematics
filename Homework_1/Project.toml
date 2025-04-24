@@ -1,4 +1,4 @@
-[deps]
-Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
-Problem_18_1_5 = "dcb11709-5f12-4f2e-b7bd-169c036d579d"
-Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+name = "Homework_1"
+uuid = "87c93f9b-a107-472b-b986-da2042228998"
+authors = ["vitolev <vito.levstik@gmail.com>"]
+version = "0.1.0"
