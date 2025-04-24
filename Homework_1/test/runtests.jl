@@ -86,3 +86,34 @@ end
     # DimensionMismatch test
     @test_throws DimensionMismatch T * [1 2; 2 0; 1 3]
 end
+
+@testset "ZgornjeTridiag is defined" begin
+    diag = [1, 2, 3]
+    superdiag = [4, 5]
+    T = ZgornjeTridiag(diag, superdiag)
+    @test T.diag == diag
+    @test T.superdiag == superdiag
+end
+
+@testset "Givens is defined" begin
+    c1 = 1
+    s1 = 0
+    c2 = sqrt(2)/2
+    s2 = sqrt(2)/2
+    rotations = [(c1, s1, 3, 1), (c2, s2, 4, 1)]
+    G = Givens(rotations)
+    @test length(G.rotations) == 2
+
+    rotations = [(c1, s1, 1, 2), (c2, s2, 3, 4)]
+    @test_throws ArgumentError Givens(rotations)
+
+    c1 = 2
+    s1 = 1
+    rotations = [(c1, s1, 2, 1)]
+    @test_throws ArgumentError Givens(rotations)
+
+    c1 = 0.5
+    s1 = 0.5
+    rotations = [(c1, s1, 3, 2)]
+    @test_throws ArgumentError Givens(rotations)
+end

@@ -1,6 +1,6 @@
 module Homework_1
 
-export SimTridiag
+export SimTridiag, ZgornjeTridiag
 
 """
     SimTridiag(gd, sd)
@@ -99,6 +99,39 @@ function *(T::SimTridiag, x::Matrix)
         end
     end
     return result
+end
+
+export ZgornjeTridiag, Givens
+
+"""
+    ZgornjeTridiag(diag, superdiag)
+
+Data type for an upper triangular matrix with the given diagonal `diag` and superdiagonal `superdiag`.
+"""
+struct ZgornjeTridiag
+    diag::Vector{Float64}
+    superdiag::Vector{Float64}
+end
+
+"""
+    Givens(rotations)
+Data type for a Givens rotation matrix, represented by a list of rotations.
+Each rotation is a tuple (c, s, i, j) where c is the cosine, s is the sine, and (i,j) are the rows / columns being rotated, with i > j.
+"""
+struct Givens
+    rotations::Vector{Tuple{Float64, Float64, Int, Int}}
+
+    function Givens(rotations)
+        for (c, s, i, j) in rotations
+            if i <= j
+                throw(ArgumentError("In each rotation, i must be greater than j (got i=$i, j=$j)"))
+            end
+            if isapprox(c^2 + s^2, 1.0) == false
+                throw(ArgumentError("Cosine and sine values must satisfy c^2 + s^2 = 1 (got c=$c, s=$s)"))
+            end
+        end
+        new(rotations)
+    end
 end
 
 end # module Homework_1
