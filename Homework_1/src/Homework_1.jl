@@ -39,6 +39,7 @@ end
 
 """
     setindex!(T::SimTridiag, value, i::Int, j::Int)
+
 Set the element at position (i, j) of the symmetric tridiagonal matrix `T` to `value`.
 If `i` and `j` are out of bounds, a `BoundsError` is thrown.
 """
@@ -60,6 +61,12 @@ end
 firstindex(T::SimTridiag, d::Int) = 1
 lastindex(T::SimTridiag, d::Int) = length(T.gd)
 
+"""
+    *(T::SimTridiag, x::Vector)
+
+Multiply the symmetric tridiagonal matrix `T` by a vector `x`.
+Returns a new vector containing the result of the multiplication.
+"""
 function *(T::SimTridiag, x::Vector)
     n = length(T.gd)
     if length(x) != n
@@ -79,6 +86,12 @@ function *(T::SimTridiag, x::Vector)
     return result
 end
 
+"""
+    *(T::SimTridiag, x::Matrix)
+
+Multiply the symmetric tridiagonal matrix `T` by a matrix `x`.
+Returns a new matrix containing the result of the multiplication.
+"""
 function *(T::SimTridiag, x::Matrix)
     n = length(T.gd)
     m = size(x, 2)
@@ -115,25 +128,40 @@ end
 
 """
     Givens(rotations)
-Data type for a Givens rotation matrix, represented by a list of rotations.
-Each rotation is a tuple (c, s, i, j) where c is the cosine, s is the sine, and (i,j) are the rows / columns being rotated, with i > j.
+
+Data type for a Givens rotation matrix, represented by a list of rotations. 
+The order of rotations is such that the first rotation (first element in the list) is applied first, then second, and so on.
+Each rotation is a tuple (c, s, i, j) where c is the cosine, s is the sine, and (i,j) are the rows / columns being rotated.
+If passed i > j it will store the rotation as (c, s, j, i) instead.
 """
 struct Givens
     rotations::Vector{Tuple{Float64, Float64, Int, Int}}
 
     function Givens(rotations)
-        for (c, s, i, j) in rotations
-            if i <= j
-                throw(ArgumentError("In each rotation, i must be greater than j (got i=$i, j=$j)"))
-            end
-            if isapprox(c^2 + s^2, 1.0) == false
+        new_rotations = Vector{Tuple{Float64, Float64, Int, Int}}(undef, length(rotations))
+        for (k, rotation) in enumerate(rotations)
+            c, s, i, j = rotation
+            if !isapprox(c^2 + s^2, 1.0)
                 throw(ArgumentError("Cosine and sine values must satisfy c^2 + s^2 = 1 (got c=$c, s=$s)"))
             end
+            if i == j
+                throw(ArgumentError("Cannot rotate the same row/column."))
+            end
+            if i > j
+                i, j = j, i
+            end
+            new_rotations[k] = (c, s, i, j)
         end
-        new(rotations)
+        new(new_rotations)
     end
 end
 
+"""
+    *(R::ZgornjeTridiag, x::Vector)
+
+Multiply the upper triangular matrix `R` by a vector `x`.
+Returns a new vector containing the result of the multiplication.
+"""
 function Base.:*(R::ZgornjeTridiag, x::Vector)
     n = length(R.diag)
     if length(x) != n
@@ -149,6 +177,12 @@ function Base.:*(R::ZgornjeTridiag, x::Vector)
     return y
 end
 
+"""
+    *(R::ZgornjeTridiag, A::Matrix)
+
+Multiply the upper triangular matrix `R` by a matrix `A`.
+Returns a new matrix containing the result of the multiplication.
+"""
 function Base.:*(R::ZgornjeTridiag, A::Matrix)
     n = length(R.diag)
     if size(A, 1) != n
@@ -162,6 +196,42 @@ function Base.:*(R::ZgornjeTridiag, A::Matrix)
             if i < n
                 B[i, j] += R.superdiag[i] * A[i+1, j]
             end
+        end
+    end
+    return B
+end
+
+"""
+    *(Q::Givens, x::Vector)
+    
+Multiply the Givens rotation matrix `Q` by a vector `x`.
+Returns a new vector containing the result of the multiplication.
+"""
+function Base.:*(Q::Givens, x::Vector)
+    y = copy(x)
+    for (c, s, i, j) in Q.rotations
+        yi = y[i]
+        yj = y[j]
+        y[i] = c * yi - s * yj
+        y[j] = s * yi + c * yj
+    end
+    return y
+end
+
+"""
+    *(Q::Givens, A::Matrix)
+
+Multiply the Givens rotation matrix `Q` by a matrix `A`.
+Returns a new matrix containing the result of the multiplication.
+"""
+function Base.:*(Q::Givens, A::Matrix)
+    B = copy(A)
+    for (c, s, i, j) in Q.rotations
+        for col in 1:size(B, 2)
+            a = B[i, col]
+            b = B[j, col]
+            B[i, col] = c * a - s * b
+            B[j, col] = s * a + c * b
         end
     end
     return B

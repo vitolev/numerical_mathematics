@@ -104,7 +104,7 @@ end
     G = Givens(rotations)
     @test length(G.rotations) == 2
 
-    rotations = [(c1, s1, 1, 2), (c2, s2, 3, 4)]
+    rotations = [(c1, s1, 1, 1), (c2, s2, 3, 4)]
     @test_throws ArgumentError Givens(rotations)
 
     c1 = 2
@@ -137,4 +137,21 @@ end
 
     # DimensionMismatch test
     @test_throws DimensionMismatch T * [1 2; 3 4; 5 6; 7 8]
+end
+
+@testset "Givens multiplication works correctly" begin
+    c1 = 0
+    s1 = 1
+    G1 = Givens([(c1, s1, 2, 1)])
+    x1 = [1, 2, 3]
+    @test G1 * x1 == [-2, 1, 3]
+
+    c2 = sqrt(3)/2
+    s2 = 1/2
+    G2 = Givens([(c1, s1, 2, 1), (c2, s2, 3, 2)])
+    x2 = [1.0, 0.0, 1.0]
+    @test isapprox(G2 * x2, [0, 0.5*(sqrt(3) - 1), 0.5*(sqrt(3) + 1)])
+
+    A = [1.0 0.0; 0 1; 2 1]
+    @test isapprox(G2 * A, [0 -1; 0.5*(sqrt(3) - 2) -0.5; 0.5*(2*sqrt(3) + 1) 0.5*sqrt(3)])
 end
