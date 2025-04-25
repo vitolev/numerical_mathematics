@@ -87,7 +87,7 @@ end
     @test_throws DimensionMismatch T * [1 2; 2 0; 1 3]
 end
 
-@testset "ZgornjeTridiag is defined" begin
+@testset "Data type 'ZgornjeTridiag' is defined" begin
     diag = [1, 2, 3]
     superdiag = [4, 5]
     T = ZgornjeTridiag(diag, superdiag)
@@ -95,7 +95,7 @@ end
     @test T.superdiag == superdiag
 end
 
-@testset "Givens is defined" begin
+@testset "Data type 'Givens' is defined" begin
     c1 = 1
     s1 = 0
     c2 = sqrt(2)/2
@@ -116,4 +116,25 @@ end
     s1 = 0.5
     rotations = [(c1, s1, 3, 2)]
     @test_throws ArgumentError Givens(rotations)
+end
+
+@testset "ZgornjeTridiag multiplication works correctly" begin
+    diag = [1, 2, 3]
+    superdiag = [4, 5]
+    T = ZgornjeTridiag(diag, superdiag)
+    x1 = [1, 2, 3]
+    x2 = [2, 0, -1]
+    @test T * x1 == [9, 19, 9]
+    @test T * x2 == [2, -5, -3]
+
+    # DimensionMismatch test
+    @test_throws DimensionMismatch T * [1, 2]
+
+    A = [1 2; 0 3; 2 1]
+    B = [1 2 3; 0 1 0; 3 2 1]
+    @test T * A == [1 14; 10 11; 6 3]
+    @test T * B == [1 6 3; 15 12 5; 9 6 3]
+
+    # DimensionMismatch test
+    @test_throws DimensionMismatch T * [1 2; 3 4; 5 6; 7 8]
 end

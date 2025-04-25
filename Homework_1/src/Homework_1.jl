@@ -134,4 +134,37 @@ struct Givens
     end
 end
 
+function Base.:*(R::ZgornjeTridiag, x::Vector)
+    n = length(R.diag)
+    if length(x) != n
+        throw(DimensionMismatch("Matrix and vector dimensions do not match."))
+    end
+    y = zeros(n)
+    for i in 1:n
+        y[i] = R.diag[i] * x[i]
+        if i < n
+            y[i] += R.superdiag[i] * x[i+1]
+        end
+    end
+    return y
+end
+
+function Base.:*(R::ZgornjeTridiag, A::Matrix)
+    n = length(R.diag)
+    if size(A, 1) != n
+        throw(DimensionMismatch("Matrix dimensions do not match."))
+    end
+    m = size(A, 2)
+    B = zeros(n, m)
+    for j in 1:m
+        for i in 1:n
+            B[i, j] = R.diag[i] * A[i, j]
+            if i < n
+                B[i, j] += R.superdiag[i] * A[i+1, j]
+            end
+        end
+    end
+    return B
+end
+
 end # module Homework_1
