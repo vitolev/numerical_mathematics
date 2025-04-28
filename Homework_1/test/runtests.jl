@@ -90,9 +90,24 @@ end
 @testset "Data type 'ZgornjeTridiag' is defined" begin
     diag = [1, 2, 3]
     superdiag = [4, 5]
-    T = ZgornjeTridiag(diag, superdiag)
-    @test T.diag == diag
-    @test T.superdiag == superdiag
+    superdiag2 = [6]
+    T = ZgornjeTridiag(diag, superdiag, superdiag2)
+    @test T.gd == diag
+    @test T.sd == superdiag
+    @test T.sd2 == superdiag2
+    @test T[1, 1] == 1
+    @test T[2, 3] == 5
+    @test T[1, 3] == 6
+    T[1, 2] = 10
+    @test T[1, 2] == 10
+
+    superdiag = [4, 5, 6]
+    @test_throws DimensionMismatch ZgornjeTridiag(diag, superdiag, superdiag2)
+    superdiag = [6, 1]
+    superdiag2 = [4, 5]
+    @test_throws DimensionMismatch ZgornjeTridiag(diag, superdiag, superdiag2)
+
+
 end
 
 @testset "Data type 'Givens' is defined" begin
@@ -119,24 +134,23 @@ end
 end
 
 @testset "ZgornjeTridiag multiplication works correctly" begin
-    diag = [1, 2, 3]
-    superdiag = [4, 5]
-    T = ZgornjeTridiag(diag, superdiag)
-    x1 = [1, 2, 3]
-    x2 = [2, 0, -1]
-    @test T * x1 == [9, 19, 9]
-    @test T * x2 == [2, -5, -3]
+    diag = [1, 2, 3, 4]
+    superdiag = [5, 6, 7]
+    superdiag2 = [8, 9]
+    T = ZgornjeTridiag(diag, superdiag, superdiag2)
+    x1 = [1, 2, 3, 4]
+    x2 = [2, 0, -1, 0]
+    @test T * x1 == [35, 58, 37, 16]
+    @test T * x2 == [-6, -6, -3, 0]
 
     # DimensionMismatch test
     @test_throws DimensionMismatch T * [1, 2]
 
-    A = [1 2; 0 3; 2 1]
-    B = [1 2 3; 0 1 0; 3 2 1]
-    @test T * A == [1 14; 10 11; 6 3]
-    @test T * B == [1 6 3; 15 12 5; 9 6 3]
+    A = [1 2; 0 3; 2 1; 1 0]
+    @test T * A == [17 25; 21 12; 13 3; 4 0]
 
     # DimensionMismatch test
-    @test_throws DimensionMismatch T * [1 2; 3 4; 5 6; 7 8]
+    @test_throws DimensionMismatch T * [1 2; 3 4; 5 6]
 end
 
 @testset "Givens multiplication works correctly" begin
@@ -154,4 +168,33 @@ end
 
     A = [1.0 0.0; 0 1; 2 1]
     @test isapprox(G2 * A, [0 -1; 0.5*(sqrt(3) - 2) -0.5; 0.5*(2*sqrt(3) + 1) 0.5*sqrt(3)])
+end
+
+@testset "Givens multiplication with ZgornjeTridiag works correctly" begin
+    diag = [1, 2, 3, 4]
+    superdiag = [5, 6, 7]
+    superdiag2 = [8, 9]
+    R = ZgornjeTridiag(diag, superdiag, superdiag2)
+    c1 = 0
+    s1 = 1
+    G1 = Givens([(c1, s1, 2, 4)])
+    @test G1 * R == [1 5 8 0; 0 0 0 -4; 0 0 3 7; 0 2 6 9]
+end
+
+@testset "QR decomposition of Tridiag works correctly" begin
+    gd = [1,1,1]
+    zd = [0,1]
+    sd = [1,0]
+    T = Tridiag(sd, gd, zd)
+    Q, R = qr(T)
+    @test isapprox(Q, Givens([(sqrt(2)/2, sqrt(2)/2, 1, 2)]))
+    @test isapprox(R, ZgornjeTridiag([sqrt(2), sqrt(2)/2, 1], [sqrt(2)/2, sqrt(2)/2], [sqrt(2)/2]))
+
+    gd = [1,2,2,1,1]
+    zd = [1,1,1,2]
+    sd = [1,1,1,2]
+    T = Tridiag(sd, gd, zd)
+    Q, R = qr(T)
+    @test isapprox(Q, Givens([(1/sqrt(2),1/sqrt(2),1,2),(sqrt(3)/3,sqrt(6)/3,2,3),(0.5,sqrt(3)/2,3,4),(0,1,4,5)]))
+    @test isapprox(R, ZgornjeTridiag([sqrt(2), sqrt(3/2), 2/sqrt(3), 2, -1], [3/sqrt(2), 5/sqrt(6), 2/sqrt(3), 1], [1/sqrt(2), sqrt(2/3), sqrt(3)]))
 end
