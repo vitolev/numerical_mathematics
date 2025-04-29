@@ -1,6 +1,6 @@
 module Homework_1
 
-export SimTridiag, Tridiag, ZgornjeTridiag, Givens, qr
+export SimTridiag, Tridiag, ZgornjeTridiag, Givens, qr, eigen
 
 import Base: getindex, setindex!, firstindex, lastindex, *, isapprox, show, convert
 
@@ -219,27 +219,6 @@ struct ZgornjeTridiag
     end
 end
 
-function show(io::IO, M::ZgornjeTridiag)
-    n = length(M.gd)
-
-    for i in 1:n
-        for j in 1:n
-            val = if i == j
-                M.gd[i]
-            elseif j == i+1
-                M.sd[i]
-            elseif j == i+2
-                M.sd2[i]
-            else
-                0.0
-            end
-            rounded_val = round(val; digits=4)
-            print(io, rpad(string(rounded_val), 10))
-        end
-        println(io)
-    end
-end
-
 """
     getindex(R::ZgornjeTridiag, i::Int, j::Int)
 
@@ -372,7 +351,8 @@ end
     Givens(rotations)
 
 Data type for a Givens rotation matrix, represented by a list of rotations. 
-The order of rotations is such that the first rotation (first element in the list) is applied first, then second, and so on.
+The order of rotations is such that if we express the Givens rotation matrix as a product of rotation matrices,
+    then the order of the rotations in the list is the order from left to right in the product.
 Each rotation is a tuple (c, s, i, j) where c is the cosine, s is the sine, and (i,j) are the rows / columns being rotated.
 If passed i > j it will store the rotation as (c, s, j, i) instead.
 """
@@ -406,7 +386,7 @@ Returns a new vector containing the result of the multiplication.
 """
 function Base.:*(Q::Givens, x::Vector)
     y = copy(x)
-    for (c, s, i, j) in Q.rotations
+    for (c, s, i, j) in reverse(Q.rotations)
         yi = y[i]
         yj = y[j]
         y[i] = c * yi - s * yj
@@ -423,12 +403,31 @@ Returns a new matrix containing the result of the multiplication.
 """
 function Base.:*(Q::Givens, A::Matrix)
     B = copy(A)
-    for (c, s, i, j) in Q.rotations
+    for (c, s, i, j) in reverse(Q.rotations)
         for col in 1:size(B, 2)
             a = B[i, col]
             b = B[j, col]
             B[i, col] = c * a - s * b
             B[j, col] = s * a + c * b
+        end
+    end
+    return B
+end
+
+"""
+    *(A::Matrix, Q::Givens)
+
+Multiply a matrix `A` by the Givens rotation matrix `Q`.
+Returns a new matrix containing the result of the multiplication.
+"""
+function Base.:*(A::Matrix, Q::Givens)
+    B = copy(A)
+    for (c, s, i, j) in Q.rotations
+        for col in 1:size(B, 1)
+            a = B[col, i]
+            b = B[col, j]
+            B[col, i] = c * a + s * b
+            B[col, j] = -s * a + c * b
         end
     end
     return B
@@ -462,19 +461,61 @@ end
 
 ####################################################################
 
+"""
+    *(Q::Givens, R::ZgornjeTridiag)
+
+Multiply the Givens rotation matrix `Q` by the upper triangular matrix `R`.
+Returns a Tridiag matrix if product of Givens and ZgornjeTridiag results in a tridiagonal matrix,
+    otherwise returns a full matrix. 
+"""
 function Base.:*(Q::Givens, R::ZgornjeTridiag)
     n = length(R.gd)
-    m = size(Q.rotations, 1)
     B = [R[i, j] for i in 1:n, j in 1:n]
-    for (c, s, i, j) in Q.rotations
-        for col in 1:n
-            a = R[i, col]
-            b = R[j, col]
-            B[i, col] = c * a - s * b
-            B[j, col] = s * a + c * b
+    A = Q * B
+    # Check if the result is tridiagonal
+    eps = 1e-12
+    is_tridiagonal = true
+    for i in 1:n
+        for j in 1:n
+            if abs(i - j) > 1 && abs(A[i, j]) > eps
+                is_tridiagonal = false
+                break
+            end
+        end
+        if !is_tridiagonal
+            break
         end
     end
-    return B
+    if is_tridiagonal
+        return Tridiag([A[i+1, i] for i in 1:n-1], [A[i, i] for i in 1:n], [A[i, i+1] for i in 1:n-1])
+    else
+        return A
+    end
+end
+
+function Base.:*(R::ZgornjeTridiag, Q::Givens)
+    n = length(R.gd)
+    B = [R[i, j] for i in 1:n, j in 1:n]
+    A = B * Q
+    # Check if the result is tridiagonal
+    eps = 1e-12
+    is_tridiagonal = true
+    for i in 1:n
+        for j in 1:n
+            if abs(i - j) > 1 && abs(A[i, j]) > eps
+                is_tridiagonal = false
+                break
+            end
+        end
+        if !is_tridiagonal
+            break
+        end
+    end
+    if is_tridiagonal
+        return Tridiag([A[i+1, i] for i in 1:n-1], [A[i, i] for i in 1:n], [A[i, i+1] for i in 1:n-1])
+    else
+        return A
+    end
 end
 
 function qr(T::Tridiag)
@@ -510,13 +551,32 @@ function qr(T::Tridiag)
         end
     end
 
-    # Reverse rotations to apply them in the correct order for Q
     Q = Givens(rotations)
     return Q, R
 end
 
 function qr(T::SimTridiag)
     qr(convert(Tridiag, T))
+end
+
+function eigen(T::SimTridiag; max_iter=1000, atol=1e-10)
+    n = length(T.gd)
+    V = [i == j ? 1.0 : 0.0 for i in 1:n, j in 1:n]  # Initialize eigenvector matrix as identity
+
+    # Because T is symmetric tridiagonal, the product R * Q is also symmetric tridiagonal.
+    Q, R = qr(T)
+    for _ in 1:max_iter
+        T = R * Q
+        V = V * Q
+        Q, R = qr(T)
+    end
+    T = R * Q
+    V = V * Q
+    eigenvalues = T.gd
+
+    eigenvectors_list = [V[:, i] for i in 1:n]
+
+    return eigenvalues, eigenvectors_list
 end
 
 end # module Homework_1

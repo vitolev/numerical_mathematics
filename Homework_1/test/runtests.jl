@@ -1,5 +1,6 @@
 using Test
 using Homework_1
+import LinearAlgebra: norm
 
 @testset "Data type 'SimTriag' is defined" begin
     gd = [1, 2, 3]
@@ -164,10 +165,19 @@ end
     s2 = 1/2
     G2 = Givens([(c1, s1, 2, 1), (c2, s2, 3, 2)])
     x2 = [1.0, 0.0, 1.0]
-    @test isapprox(G2 * x2, [0, 0.5*(sqrt(3) - 1), 0.5*(sqrt(3) + 1)])
+    @test isapprox(G2 * x2, [0.5, 1, 0.5*sqrt(3)])
 
     A = [1.0 0.0; 0 1; 2 1]
-    @test isapprox(G2 * A, [0 -1; 0.5*(sqrt(3) - 2) -0.5; 0.5*(2*sqrt(3) + 1) 0.5*sqrt(3)])
+    At = [1.0 0 2; 0 1 1]
+    @test isapprox(G2 * A, [1 0.5*(1-sqrt(3)); 1 0; sqrt(3) 0.5*(1+sqrt(3))])
+    @test isapprox(At * G2, [0 0.5*(2-sqrt(3)) 0.5+sqrt(3); 1 0.5 0.5*sqrt(3)])
+
+    c1 = sqrt(2)/2
+    s1 = sqrt(2)/2
+    G3 = Givens([(c1, s1, 2, 1)])
+    A = [1.0 5.0 8.0 0.0; 0 0 0 -4; 0 0 3 7; 0 2 6 9]
+    @test isapprox(G3 * A, [sqrt(2)/2 5*sqrt(2)/2 8*sqrt(2)/2 4*sqrt(2)/2; sqrt(2)/2 5*sqrt(2)/2 8*sqrt(2)/2 -4*sqrt(2)/2; 0 0 3 7; 0 2 6 9])
+    @test isapprox(A * G3, [3*sqrt(2) 2*sqrt(2) 8 0; 0 0 0 -4; 0 0 3 7; sqrt(2) sqrt(2) 6 9])
 end
 
 @testset "Givens multiplication with ZgornjeTridiag works correctly" begin
@@ -179,6 +189,10 @@ end
     s1 = 1
     G1 = Givens([(c1, s1, 2, 4)])
     @test G1 * R == [1 5 8 0; 0 0 0 -4; 0 0 3 7; 0 2 6 9]
+    c2 = sqrt(2)/2
+    s2 = sqrt(2)/2
+    G2 = Givens([(c2, s2, 1, 2), (c1, s1, 2, 4)])
+    @test G2 * R == [sqrt(2)/2 5*sqrt(2)/2 8*sqrt(2)/2 4*sqrt(2)/2; sqrt(2)/2 5*sqrt(2)/2 8*sqrt(2)/2 -4*sqrt(2)/2; 0 0 3 7; 0 2 6 9]
 end
 
 @testset "QR decomposition of (Sim)Tridiag works correctly" begin
@@ -202,4 +216,22 @@ end
     Q, R = qr(ST)
     @test isapprox(Q, Givens([(1/sqrt(2),1/sqrt(2),1,2),(sqrt(3)/3,sqrt(6)/3,2,3),(0.5,sqrt(3)/2,3,4),(0,1,4,5)]))
     @test isapprox(R, ZgornjeTridiag([sqrt(2), sqrt(3/2), 2/sqrt(3), 2, -1], [3/sqrt(2), 5/sqrt(6), 2/sqrt(3), 1], [1/sqrt(2), sqrt(2/3), sqrt(3)]))
+end
+
+@testset "QR iterations work correctly" begin
+    gd = [3,2,1]
+    sd = [1,1]
+    T = SimTridiag(gd, sd)
+
+    eigenvalues, eigenvectors = eigen(T)
+    @test isapprox(eigenvalues, [2+sqrt(3), 2, 2-sqrt(3)])
+    v1 = [2+sqrt(3), 1+sqrt(3), 1]
+    v2 = [-1, 1, 1]
+    v3 = [2-sqrt(3), 1-sqrt(3), 1]
+    v1 = v1 / norm(v1)
+    v2 = v2 / norm(v2)
+    v3 = v3 / norm(v3)
+    @test isapprox(eigenvectors[1], v1)
+    @test isapprox(eigenvectors[2], v2)
+    @test isapprox(eigenvectors[3], v3)
 end
