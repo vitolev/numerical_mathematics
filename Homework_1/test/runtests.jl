@@ -181,7 +181,7 @@ end
     @test G1 * R == [1 5 8 0; 0 0 0 -4; 0 0 3 7; 0 2 6 9]
 end
 
-@testset "QR decomposition of Tridiag works correctly" begin
+@testset "QR decomposition of (Sim)Tridiag works correctly" begin
     gd = [1,1,1]
     zd = [0,1]
     sd = [1,0]
@@ -195,6 +195,11 @@ end
     sd = [1,1,1,2]
     T = Tridiag(sd, gd, zd)
     Q, R = qr(T)
+    @test isapprox(Q, Givens([(1/sqrt(2),1/sqrt(2),1,2),(sqrt(3)/3,sqrt(6)/3,2,3),(0.5,sqrt(3)/2,3,4),(0,1,4,5)]))
+    @test isapprox(R, ZgornjeTridiag([sqrt(2), sqrt(3/2), 2/sqrt(3), 2, -1], [3/sqrt(2), 5/sqrt(6), 2/sqrt(3), 1], [1/sqrt(2), sqrt(2/3), sqrt(3)]))
+
+    ST = SimTridiag(gd, sd)
+    Q, R = qr(ST)
     @test isapprox(Q, Givens([(1/sqrt(2),1/sqrt(2),1,2),(sqrt(3)/3,sqrt(6)/3,2,3),(0.5,sqrt(3)/2,3,4),(0,1,4,5)]))
     @test isapprox(R, ZgornjeTridiag([sqrt(2), sqrt(3/2), 2/sqrt(3), 2, -1], [3/sqrt(2), 5/sqrt(6), 2/sqrt(3), 1], [1/sqrt(2), sqrt(2/3), sqrt(3)]))
 end

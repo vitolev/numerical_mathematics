@@ -2,7 +2,7 @@ module Homework_1
 
 export SimTridiag, Tridiag, ZgornjeTridiag, Givens, qr
 
-import Base: getindex, setindex!, firstindex, lastindex, *, isapprox, show
+import Base: getindex, setindex!, firstindex, lastindex, *, isapprox, show, convert
 
 ########################################
 ############## SimTridiag ##############    
@@ -185,6 +185,16 @@ function *(T::Tridiag, v::Vector)
     end
     b[n] = T[n,n-1] * v[n-1] + T[n,n] * v[n]
     return b
+end
+
+"""
+    convert(::Type{Tridiag}, T::SimTridiag)
+
+Convert a `SimTridiag` matrix to a `Tridiag` matrix.
+"""
+function Base.convert(::Type{Tridiag}, T::SimTridiag)
+    n = length(T.gd)
+    Tridiag(copy(T.sd), copy(T.gd), copy(T.sd))  # sd is used as both sub- and super-diagonal
 end
 
 ###############################################
@@ -503,6 +513,10 @@ function qr(T::Tridiag)
     # Reverse rotations to apply them in the correct order for Q
     Q = Givens(rotations)
     return Q, R
+end
+
+function qr(T::SimTridiag)
+    qr(convert(Tridiag, T))
 end
 
 end # module Homework_1
