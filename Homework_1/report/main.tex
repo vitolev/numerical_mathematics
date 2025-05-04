@@ -1,0 +1,96 @@
+\documentclass[11pt, titlepage]{article} 
+
+\usepackage{geometry}
+\geometry{left=0.8in, right=0.8in, top=0.8in, bottom=0.8in}
+
+\usepackage{color}
+\usepackage{graphicx} % slike
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{siunitx} % enote
+\usepackage{amsmath} % enačbe
+\usepackage{amssymb} % simboli
+\usepackage[thinc]{esdiff} % za odvode
+\usepackage[colorlinks=true]{hyperref} % za linke
+\usepackage{float} % za fiksiranje figur
+\usepackage{mathtools}
+\usepackage{esint} % za fancy integrale
+\usepackage[numbib,nottoc]{tocbibind}
+
+\usepackage{tikz}
+
+\newcommand{\dif}[1]{\,{\rm d}#1}
+
+\begin{document}
+
+\begin{titlepage}
+    \begin{center}
+        \includegraphics[width=0.5\textwidth]{figures/FRI_logo.png}\\
+        \vspace{0.5cm}
+        \vspace{3cm}
+        {\LARGE \bf QR razcep simetrične tridiagonalne matrike} \\
+        \vspace{0.3cm}
+        \vspace{2.0cm}
+        {\large Numerična matematika}\\
+        \vspace{0.2cm}
+        {|}\\
+        \vspace{0.2cm}
+        {\large 1. domača naloga}\\
+        \vspace{2.0cm}
+    \end{center}
+    \vfill
+    \begin{flushleft}
+        {\normalsize {\sf Avtor:} Vito Levstik\\}
+    \end{flushleft}
+    \vspace{2cm}
+    \begin{center}
+        {\normalsize \sc Akademsko leto 2024/2025}
+    \end{center}
+\end{titlepage}
+
+\newpage
+
+\section{Uvod}
+
+Cilj te naloge je implementirati učinkovit QR razcep (simetrične) tridiagonalne matrike z Givensovimi rotacijami 
+in ga uporabiti pri QR iteraciji za izračun lastnih vrednosti in lastnih vektorjev simetrične tridiagonalne matrike.
+
+Da lahko to dosežemo, je najprej potrebno implementirati tipe \texttt{Tridiag}, ki predstavlja tridiagonalno matriko,
+\texttt{SimTridiag}, ki predstavlja simetrično tridiagonalno matriko, \texttt{Givens}, ki predstavlja matriko Givensovih rotacij in
+\texttt{ZgornjeTridiag}, ki predstavlja matriko z neničelnimi elementi na diagonali in dveh zgornjih diagonalah.
+
+Glavna naloga je tako implementacija funkcije \texttt{qr($T$)}, ki tridiagonalno matriko $T$ razcepi v produkt matrik $Q$ in $R$, kjer je $Q$ tipa \texttt{Givens} in $R$ tipa \texttt{ZgornjeTridiag} in
+implementacija funkcije \texttt{eigen($T$)}, ki izračuna lastne vrednosti in lastne vektorje simetrične tridiagonalne matrike $T$ z uporabo QR iteracije.
+
+\section{Implementacija}
+Podatkovni tip \texttt{Tridiag} sprejme tri sezname in sicer seznam spodnje diagonale, seznam glavne diagonale in seznam zgornje diagonale.
+Tale podatkovni tip smo že implementirali na vajah, zato je koda preprosto povzeta iz vaj. Podatkovni tip \texttt{SimTridiag} je podobno definiran, le da sprejme dva seznama, seznam glavne diagonale in seznam pod-diagonale, 
+saj sta zgornja in spodnja diagonala enaka. Podatkovni tip \texttt{ZgornjeTridiag} je podoben, le da sprejme seznam glavne diagonale in dva seznama zgornjih diagonal.
+
+Pri vseh podatkovnih tipih smo pazili, da program preveri, ali so velikosti seznamov pravilne (npr. če je dolžina glavne diagonale $n$, potem mora biti dolžina zgornje diagonale $n-1$).
+Do elementov vseh treh matrik lahko dostopamo z indeksi, kot pri običajni matriki, kar smo storili z implementacijo funkcij \texttt{getindex()}. Elemente matrik lahko tudi spreminjamo s funkcijo \texttt{setindex()},
+vendar je potrebno paziti, da spreminjamo le elemente, ki so v matriki definirani. V nasprotnem primeru, bo program vrnil napako.
+
+Pomemben podatkovni tip, ki si zasluži bolj podroben opis je \texttt{Givens}. Ta podatkovni sprejme seznam 4-dimenzionalnih vektorjev. Prvi dve komponenti sta kosinus in sinus kota rotacije, medtem ko sta tretja in četrta komponenta
+indeksa stolpcev/vrstic, ki jih rotiramo. Za boljšo predstavo si poglejmo matrično reprezentacijo Givensove rotacije
+\[
+G(c,s,i,j) =
+\begin{bmatrix}
+1      & \cdots & 0      & \cdots & 0      & \cdots & 0      \\
+\vdots & \ddots & \vdots &        & \vdots &        & \vdots \\
+0      & \cdots & c      & \cdots & -s     & \cdots & 0      \\
+\vdots &        & \vdots & \ddots & \vdots &        & \vdots \\
+0      & \cdots & s      & \cdots & c      & \cdots & 0      \\
+\vdots &        & \vdots &        & \vdots & \ddots & \vdots \\
+0      & \cdots & 0      & \cdots & 0      & \cdots & 1      
+\end{bmatrix}
+\]
+kjer se $c = \cos(\theta)$ in $s = \sin(\theta)$, kjer je $\theta$ kot rotacije, pojavita na presečišču $i$ in $j$-te vrstice in stolpca.
+
+Zadnji korak, ki ga moramo narediti preden se lotimo implementacije \texttt{qr($T$)}, je implementacija funkcije množenja med matrikami tipa \texttt{Givens} in \texttt{ZgornjeTridiag}. Ko bodisi z leve ali desne pomnožimo matriko tipa \texttt{ZgornjeTridiag}
+z matriko tipa \texttt{Givens}, ni nujno da je dobljena matrika tipa \texttt{ZgornjeTridiag}. Množenje teh dveh matrik smo zato implementirali tako, da smo matriko tipa \texttt{ZgornjeTridiag} najprej pretvorili v polno matriko ter
+nato izvedli množenje. Če je rezultat množenja tridiagonalna matrika, smo jo pretvorili v tip \texttt{Tridiag}, sicer pa smo jo pustili v polni obliki.
+
+\section{Rezultati}
+
+\end{document}

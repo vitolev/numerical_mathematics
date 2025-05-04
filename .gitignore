@@ -1,0 +1,35 @@
+# LaTeX intermediate and output files
+*.aux
+*.log
+*.out
+*.toc
+*.lof
+*.lot
+*.fls
+*.fdb_latexmk
+*.synctex.gz
+*.bbl
+*.blg
+*.nav
+*.snm
+*.vrb
+*.xdv
+
+# Temporary files
+*~
+*.bak
+*.tmp
+*.backup
+*.sav
+
+# Editor-specific files
+*.swp
+*.swo
+*.DS_Store
+Thumbs.db
+
+# Overleaf project files
+*.synctex.gz(busy)
+
+# Latexmk output directory (if configured)
+latex.out/

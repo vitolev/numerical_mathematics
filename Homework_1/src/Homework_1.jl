@@ -201,7 +201,7 @@ end
 ############## ZgornjeTridiag #################
 ###############################################
 """
-    ZgornjeTridiag(diag, superdiag)
+    ZgornjeTridiag(gd, sd, sd2)
 
 Data type for an upper triangular matrix with the given diagonal `gd` first superdiagonal `sd` and second superdiagonal `sd2`.
 """
@@ -493,6 +493,13 @@ function Base.:*(Q::Givens, R::ZgornjeTridiag)
     end
 end
 
+"""
+    *(R::ZgornjeTridiag, Q::Givens)
+
+Multiply the upper triangular matrix `R` by the Givens rotation matrix `Q`.
+Returns a Tridiag matrix if product of Givens and ZgornjeTridiag results in a tridiagonal matrix,
+    otherwise returns a full matrix. 
+"""
 function Base.:*(R::ZgornjeTridiag, Q::Givens)
     n = length(R.gd)
     B = [R[i, j] for i in 1:n, j in 1:n]
@@ -518,6 +525,12 @@ function Base.:*(R::ZgornjeTridiag, Q::Givens)
     end
 end
 
+"""
+    qr(T::Tridiag)
+
+Perform QR decomposition of the tridiagonal matrix `T` using Givens rotations.
+Returns a tuple (Q, R) where `Q` is an orthogonal matrix of type Givens and `R` is a matrix of type ZgornjeTridiag.
+"""
 function qr(T::Tridiag)
     n = length(T.gd)
     gd = Float64.(T.gd)   # Convert to Float64
@@ -555,11 +568,24 @@ function qr(T::Tridiag)
     return Q, R
 end
 
+"""
+    qr(T::SimTridiag)
+
+Perform QR decomposition of the symmetric tridiagonal matrix `T` using Givens rotations, by converting it to a `Tridiag` matrix
+and then applying the QR decomposition.
+Returns a tuple (Q, R) where `Q` is an orthogonal matrix of type Givens and `R` is a matrix of type ZgornjeTridiag.
+"""
 function qr(T::SimTridiag)
     qr(convert(Tridiag, T))
 end
 
-function eigen(T::SimTridiag; max_iter=1000, atol=1e-10)
+"""
+    eigen(T::SimTridiag; max_iter=1000)
+
+Compute the eigenvalues and eigenvectors of the symmetric tridiagonal matrix `T` using the QR algorithm.
+Returns a tuple (eigenvalues, eigenvectors) where `eigenvalues` is a vector of eigenvalues and `eigenvectors` is a list of vectors.
+"""
+function eigen(T::SimTridiag; max_iter=1000)
     n = length(T.gd)
     V = [i == j ? 1.0 : 0.0 for i in 1:n, j in 1:n]  # Initialize eigenvector matrix as identity
 
