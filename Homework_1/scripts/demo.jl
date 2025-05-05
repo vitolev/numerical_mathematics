@@ -3,6 +3,7 @@
 using LinearAlgebra
 using Statistics
 using Homework_1
+using Plots
 
 possible_sizes = [10, 50, 100, 250, 500, 750, 1000]
 
@@ -38,59 +39,62 @@ function measure_time(n)
     return custom_time, linear_time
 end
 
+function compare_qr_decompositions()
+    means_custom = Float64[]
+    uncertainties_custom = Float64[]
+    means_linear = Float64[]
+    uncertainties_linear = Float64[]
 
-means_custom = Float64[]
-uncertainties_custom = Float64[]
-means_linear = Float64[]
-uncertainties_linear = Float64[]
+    for n in possible_sizes
+        custom_times = Float64[]
+        linear_times = Float64[]
+        for _ in 1:100 # Repeat the measurement 100 times for each size
+            custom_time, linear_time = measure_time(n)
+            push!(custom_times, custom_time)
+            push!(linear_times, linear_time)
+        end
+        avg_custom_time = mean(custom_times)
+        avg_linear_time = mean(linear_times)
+        std_custom_time = std(custom_times)
+        std_linear_time = std(linear_times)
 
-for n in possible_sizes
-    custom_times = Float64[]
-    linear_times = Float64[]
-    for _ in 1:100 # Repeat the measurement 100 times for each size
-        custom_time, linear_time = measure_time(n)
-        push!(custom_times, custom_time)
-        push!(linear_times, linear_time)
+        custom_time_un = std_custom_time / sqrt(length(custom_times))
+        linear_time_un = std_linear_time / sqrt(length(linear_times))
+        
+        push!(means_custom, avg_custom_time)
+        push!(uncertainties_custom, custom_time_un)
+        push!(means_linear, avg_linear_time)
+        push!(uncertainties_linear, linear_time_un)
+
+        println("Size: $n")
+        println("Custom QR time: $avg_custom_time ± $custom_time_un seconds")
+        println("LinearAlgebra QR time: $avg_linear_time ± $linear_time_un seconds")
     end
-    avg_custom_time = mean(custom_times)
-    avg_linear_time = mean(linear_times)
-    std_custom_time = std(custom_times)
-    std_linear_time = std(linear_times)
 
-    custom_time_un = std_custom_time / sqrt(length(custom_times))
-    linear_time_un = std_linear_time / sqrt(length(linear_times))
-    
-    push!(means_custom, avg_custom_time)
-    push!(uncertainties_custom, custom_time_un)
-    push!(means_linear, avg_linear_time)
-    push!(uncertainties_linear, linear_time_un)
+    # Plotting the results
 
-    println("Size: $n")
-    println("Custom QR time: $avg_custom_time ± $custom_time_un seconds")
-    println("LinearAlgebra QR time: $avg_linear_time ± $linear_time_un seconds")
+    gr(size=(600, 350))
+    # Plot custom QR times with error bars
+    plot(possible_sizes, means_custom; 
+        yerror=uncertainties_custom, 
+        label="Prilagojen QR", 
+        marker=:circle, 
+        linewidth=2, 
+        linestyle=:solid,
+        legend=:topleft)
+
+    # Plot LinearAlgebra QR times with error bars
+    plot!(possible_sizes, means_linear; 
+        yerror=uncertainties_linear, 
+        label="LinearAlgebra QR", 
+        marker=:square, 
+        linewidth=2, 
+        linestyle=:solid)
+
+    xlabel!("Velikost matrike")
+    ylabel!("Čas (sekunde)")
+    savefig("qr_performance_comparison.png")
 end
 
-# Plotting the results
-using Plots
-gr(size=(600, 400))
-# Plot custom QR times with error bars
-plot(possible_sizes, means_custom; 
-     yerror=uncertainties_custom, 
-     label="Custom QR", 
-     marker=:circle, 
-     linewidth=2, 
-     linestyle=:solid,
-     legend=:topleft)
-
-# Plot LinearAlgebra QR times with error bars
-plot!(possible_sizes, means_linear; 
-      yerror=uncertainties_linear, 
-      label="LinearAlgebra QR", 
-      marker=:square, 
-      linewidth=2, 
-      linestyle=:solid)
-
-xlabel!("Matrix Size")
-ylabel!("Time (seconds)")
-title!("Performance Comparison of QR Decomposition")
-savefig("qr_performance_comparison.png")
+# Run the comparison function
+compare_qr_decompositions()
