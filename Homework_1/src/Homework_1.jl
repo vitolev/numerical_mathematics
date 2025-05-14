@@ -138,6 +138,11 @@ struct Tridiag
     end
 end
 
+"""
+    getindex(T::Tridiag, i::Int, j::Int)
+
+Get the element at position (i, j) of the tridiagonal matrix `T`.
+"""
 function getindex(T::Tridiag, i::Int, j::Int)
     n = length(T.d)
     if i < 1 || i > n || j < 1 || j > n
@@ -155,6 +160,12 @@ function getindex(T::Tridiag, i::Int, j::Int)
     end
 end
 
+"""
+    setindex!(T::Tridiag, value, i::Int, j::Int)
+
+Set the element at position (i, j) of the tridiagonal matrix `T` to `value`.
+If `i` and `j` are out of bounds, a `BoundsError` is thrown.
+"""
 function setindex!(T::Tridiag, v, i::Int, j::Int)
     n = length(T.d)
     if i < 1 || i > n || j < 1 || j > n
@@ -172,6 +183,12 @@ function setindex!(T::Tridiag, v, i::Int, j::Int)
     end
 end
 
+"""
+    *(T::Tridiag, x::Vector)
+
+Multiply the tridiagonal matrix `T` by a vector `x`.
+Returns a new vector containing the result of the multiplication.
+"""
 function *(T::Tridiag, v::Vector)
     n = length(T.d)
     if length(v) != n
