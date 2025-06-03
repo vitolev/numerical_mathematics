@@ -39,6 +39,9 @@ function measure_time(n)
     return custom_time, linear_time
 end
 
+"""
+Function to compare the performance of custom QR decomposition with LinearAlgebra's QR decomposition
+"""
 function compare_qr_decompositions()
     means_custom = Float64[]
     uncertainties_custom = Float64[]
@@ -96,5 +99,50 @@ function compare_qr_decompositions()
     savefig("qr_performance_comparison.png")
 end
 
+"""
+Function to perform qr iteration on example and plots the convergence
+"""
+function qr_iteration()
+    T = SimTridiag([4.0, 2.0, 1.0], [1.0, 2.0])
+
+    # The same function as in Homework_1.qr, but here we store intermediate results for plotting
+    eigenvalue_1 = [T.gd[1]]
+    eigenvalue_2 = [T.gd[2]]
+    eigenvalue_3 = [T.gd[3]]
+    max_iter = 19
+    n = length(T.gd)
+    V = [i == j ? 1.0 : 0.0 for i in 1:n, j in 1:n]  # Initialize eigenvector matrix as identity
+    Q, R = Homework_1.qr(T)
+    for _ in 1:max_iter
+        T = R * Q
+        eigenvalue_1 = push!(eigenvalue_1, T.gd[1])
+        eigenvalue_2 = push!(eigenvalue_2, T.gd[2])
+        eigenvalue_3 = push!(eigenvalue_3, T.gd[3])
+        V = V * Q
+        Q, R = Homework_1.qr(T)
+    end
+    T = R * Q
+    V = V * Q
+    eigenvalue_1 = push!(eigenvalue_1, T.gd[1])
+    eigenvalue_2 = push!(eigenvalue_2, T.gd[2])
+    eigenvalue_3 = push!(eigenvalue_3, T.gd[3])
+
+    # Print final eigenvalues
+    println("Final eigenvalues after QR iteration:")
+    println("Eigenvalue 1: ", T.gd[1])
+    println("Eigenvalue 2: ", T.gd[2])
+    println("Eigenvalue 3: ", T.gd[3])
+
+    # Plot the convergence of eigenvalues
+    gr(size=(600, 350))
+    plot(0:max_iter+1, eigenvalue_1, label="Eigenvalue 1", marker=:circle, linewidth=2, legend=:right)
+    plot!(0:max_iter+1, eigenvalue_2, label="Eigenvalue 2", marker=:circle, linewidth=2)
+    plot!(0:max_iter+1, eigenvalue_3, label="Eigenvalue 3", marker=:circle, linewidth=2)
+    xlabel!("Iteration")
+    ylabel!("Eigenvalue")
+    savefig("qr_iteration_convergence.png")
+end
+
 # Run the comparison function
 compare_qr_decompositions()
+qr_iteration()

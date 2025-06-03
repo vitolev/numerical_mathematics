@@ -120,4 +120,22 @@ Primerjali smo QR razcep simetrične tridiagonalne matrike različnih velikosti 
 Vidimo, da je naš algoritem QR razcepa bistveno hitrejši pri večjih matrikah. Razlog je v tem, da je naš algoritem optimiziran za tridiagonalne matrike in deluje v $O(n)$, medtem ko QR razcep iz knjižice \texttt{LinearAlgebra} deluje za poljubne matrike, kar pomeni, da deluje v $O(n^3)$.
 Po sliki sodeč naš algoritem resnično deluje v linearnem času, medtem ko QR razcep iz knjižice \texttt{LinearAlgebra} izgleda da deluje v bolj kompleksnem času (verjetno $O(n^3)$).
 
+Za konec še poglejmo uporabo pri QR iteraciji simetrične tridiagonalne matrike. Za primer vzamemo matriko
+$$
+T = \begin{bmatrix}
+    4 & 1 & 0 \\
+    1 & 2 & 2 \\
+    0 & 2 & 1
+\end{bmatrix}.
+$$
+Analitična rešitev lastnih vrednosti te matrike so $\lambda_1 = 2 + \sqrt{7} \approx 4.6457513110645906$, $\lambda_2 = 3$ in $\lambda_3 = 2 - \sqrt{7} \approx -0.6457513110645906$.
+Izvedemo QR iteracijo z $25$ koraki in dobimo lastne vrednosti $\lambda_1 \approx 4.645751289681215$, $\lambda_2 \approx 3.0000000213833773$ in $\lambda_3 \approx -0.645751311064591$.
+Vidimo, da so lastne vrednosti zelo blizu analitičnim rešitvam, kljub majhnemu številu iteracij, kar pomeni, da QR iteracija zelo hitro konvergira. Na sliki \ref{fig:qr_iteration} je prikazana konvergenca lastnih vrednosti v odvisnosti od števila iteracij.
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.7\textwidth]{figures/qr_iteration_convergence.png}
+    \caption{Konvergenca lastnih vrednosti v odvisnosti od števila iteracij.}
+    \label{fig:qr_iteration}
+\end{figure}
+
 \end{document}
