@@ -193,6 +193,26 @@ end
     s2 = sqrt(2)/2
     G2 = Givens([(c2, s2, 1, 2), (c1, s1, 2, 4)])
     @test G2 * R == [sqrt(2)/2 5*sqrt(2)/2 8*sqrt(2)/2 4*sqrt(2)/2; sqrt(2)/2 5*sqrt(2)/2 8*sqrt(2)/2 -4*sqrt(2)/2; 0 0 3 7; 0 2 6 9]
+
+    G3 = Givens([(sqrt(2)/2, sqrt(2)/2, 1, 2)])
+    R = ZgornjeTridiag([sqrt(2), sqrt(2)/2, 1], [sqrt(2)/2, sqrt(2)/2], [sqrt(2)/2])
+    @test isapprox(G3 * R, Tridiag([1,0], [1,1,1], [0,1]))
+end
+
+@testset "ZgornjeTridiag multiplication with Givens works correctly" begin
+    diag = [1,1,1]
+    superdiag = [2,2]
+    superdiag2 = [3]
+    R = ZgornjeTridiag(diag, superdiag, superdiag2)
+    G = Givens([(0.0, -1.0, 1, 3)])
+    @test R * G == [-3 2 1; -2 1 0; -1 0 0]
+
+    diag = [-sqrt(5), 3/sqrt(5), 1, 2]
+    superdiag = [-4/sqrt(5), 0, 0]
+    superdiag2 = [0, 0]
+    R = ZgornjeTridiag(diag, superdiag, superdiag2)
+    G = Givens([(-1/sqrt(5), -2/sqrt(5), 1, 2)])
+    @test isapprox(R * G, Tridiag([-6/5, 0, 0], [13/5, -3/5, 1, 2], [-6/5, 0, 0]))
 end
 
 @testset "QR decomposition of (Sim)Tridiag works correctly" begin

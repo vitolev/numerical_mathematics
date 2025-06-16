@@ -214,6 +214,34 @@ function Base.convert(::Type{Tridiag}, T::SimTridiag)
     Tridiag(copy(T.sd), copy(T.gd), copy(T.sd))  # sd is used as both sub- and super-diagonal
 end
 
+"""
+    isapprox(T1::Tridiag, T2::Tridiag)
+
+Check if two tridiagonal matrices `T1` and `T2` are approximately equal.
+Returns `true` if they are approximately equal, `false` otherwise.
+"""
+function isapprox(T1::Tridiag, T2::Tridiag; atol=1e-10, rtol=1e-6)
+    if length(T1.gd) != length(T2.gd) || length(T1.sd) != length(T2.sd) || length(T1.zd) != length(T2.zd)
+        return false
+    end
+    for i in 1:length(T1.gd)
+        if !isapprox(T1.gd[i], T2.gd[i]; atol=atol, rtol=rtol)
+            return false
+        end
+    end
+    for i in 1:length(T1.sd)
+        if !isapprox(T1.sd[i], T2.sd[i]; atol=atol, rtol=rtol)
+            return false
+        end
+    end
+    for i in 1:length(T1.zd)
+        if !isapprox(T1.zd[i], T2.zd[i]; atol=atol, rtol=rtol)
+            return false
+        end
+    end
+    return true
+end
+
 ###############################################
 ############## ZgornjeTridiag #################
 ###############################################
@@ -482,64 +510,101 @@ end
     *(Q::Givens, R::ZgornjeTridiag)
 
 Multiply the Givens rotation matrix `Q` by the upper triangular matrix `R`.
-Returns a Tridiag matrix if product of Givens and ZgornjeTridiag results in a tridiagonal matrix,
-    otherwise returns a full matrix. 
+For the purpose of this homework the Givens matrices are such that when multiplying with ZgornjeTridiag, it results in a tridiagonal matrix.
+In order that multiplication also works in general case, we check throughout the multiplication if elements out of the tridiagonal band are getting to zero. 
+If at any point we find that there are non-zero elements, we convert `R` to a full matrix and return the result of multiplication as a full matrix.
+Otherwise, the tridiagonal structure is obtained and returned as a `Tridiag` matrix.
 """
 function Base.:*(Q::Givens, R::ZgornjeTridiag)
     n = length(R.gd)
-    B = [R[i, j] for i in 1:n, j in 1:n]
-    A = Q * B
-    # Check if the result is tridiagonal
-    eps = 1e-12
-    is_tridiagonal = true
-    for i in 1:n
-        for j in 1:n
-            if abs(i - j) > 1 && abs(A[i, j]) > eps
-                is_tridiagonal = false
-                break
-            end
+    T = ZgornjeTridiag(copy(R.gd), copy(R.sd), copy(R.sd2)) # Creates a copy of the upper triangular matrix R in order to not modify the original matrix.
+    sd = zeros(n - 1)   # Allocate zeros for the sub-diagonal
+    for (c, s, i, j) in reverse(Q.rotations)
+        if i >= n
+            throw(BoundsError("Rotation indices out of bounds for matrix size $n."))
         end
-        if !is_tridiagonal
-            break
+        if i + 1 != j
+            # If the rotation is not between adjacent rows, we cannot guarantee tridiagonal structure. Return full matrix.
+            println("Warning: Givens rotation is not between adjacent rows $i and $j. The resulting matrix may not be tridiagonal.")
+            B = [T[i, j] for i in 1:n, j in 1:n]
+            return Q * B
+        end
+        # Check if c*T[i, j+1] - s*T[i+1, j+1] is non-zero. If it is, we cannot guarantee tridiagonal structure. Return full matrix.
+        if j < n && !isapprox(c*T[i, j+1] - s*T[i+1, j+1], 0.0; atol=1e-10)
+            println("Warning: Givens rotation results in non-zero element outside the tridiagonal band at position ($i, $(j+1)): $(c*R[i, j+1] - s*R[i+1, j+1]). The resulting matrix may not be tridiagonal.")
+            B = [T[i, j] for i in 1:n, j in 1:n]
+            return Q * B
+        end
+        # Perform the multiplication
+        a_ii = T[i, i]
+        a_ii1 = T[i, i + 1]
+        a_i1i1 = T[i + 1, i + 1]
+
+        sd[i] = s * a_ii 
+        T[i, i] = c * a_ii
+        T[i, i + 1] = c * a_ii1 - s * a_i1i1
+        T[i + 1, i + 1] = s * a_ii1 + c * a_i1i1
+
+        if i < n - 1
+            a_ii2 = T[i, i + 2]
+            a_i1i2 = T[i + 1, i + 2]
+            T[i, i + 2] = 0 # We checked that this is zero in previous step
+            T[i + 1, i + 2] = s * a_ii2 + c * a_i1i2
         end
     end
-    if is_tridiagonal
-        return Tridiag([A[i+1, i] for i in 1:n-1], [A[i, i] for i in 1:n], [A[i, i+1] for i in 1:n-1])
-    else
-        return A
-    end
+    # If we reach here, we have a tridiagonal structure
+    return Tridiag(sd, T.gd, T.sd)
 end
 
 """
     *(R::ZgornjeTridiag, Q::Givens)
 
 Multiply the upper triangular matrix `R` by the Givens rotation matrix `Q`.
-Returns a Tridiag matrix if product of Givens and ZgornjeTridiag results in a tridiagonal matrix,
-    otherwise returns a full matrix. 
+For the purpose of this homework the Givens matrices are such that when multiplying with ZgornjeTridiag, it results in a tridiagonal matrix.
+In order that multiplication also works in general case, we check throughout the multiplication if elements out of the tridiagonal band are getting to zero.
+If at any point we find that there are non-zero elements, we convert `R` to a full matrix and return the result of multiplication as a full matrix.
+Otherwise, the tridiagonal structure is obtained and returned as a `Tridiag` matrix.
 """
 function Base.:*(R::ZgornjeTridiag, Q::Givens)
     n = length(R.gd)
-    B = [R[i, j] for i in 1:n, j in 1:n]
-    A = B * Q
-    # Check if the result is tridiagonal
-    eps = 1e-12
-    is_tridiagonal = true
-    for i in 1:n
-        for j in 1:n
-            if abs(i - j) > 1 && abs(A[i, j]) > eps
-                is_tridiagonal = false
-                break
-            end
+    T = ZgornjeTridiag(copy(R.gd), copy(R.sd), copy(R.sd2)) # Creates a copy of the upper triangular matrix R in order to not modify the original matrix.
+    sd = zeros(n - 1)   # Allocate zeros for the sub-diagonal
+    for (c, s, i, j) in Q.rotations
+        if i >= n
+            throw(BoundsError("Rotation indices out of bounds for matrix size $n."))
         end
-        if !is_tridiagonal
-            break
+        if i + 1 != j
+            # If the rotation is not between adjacent rows, we cannot guarantee tridiagonal structure. Return full matrix.
+            println("Warning: Givens rotation is not between adjacent rows $i and $j. The resulting matrix may not be tridiagonal.")
+            B = [T[i, j] for i in 1:n, j in 1:n]
+            return B * Q
+        end
+        # Check if -s*T[i-1,j-1] + c*T[i-1,j] is non-zero. If it is, we cannot guarantee tridiagonal structure. Return full matrix.
+        if i > 1 && !isapprox(-s*T[i-1, j-1] + c*T[i-1, j], 0.0; atol=1e-10)
+            println("Warning: Givens rotation results in non-zero element outside the tridiagonal band at position ($(i-1), $j): $(-s*T[i-1, j-1] + c*T[i-1, j]). The resulting matrix may not be tridiagonal.")
+            B = [T[i, j] for i in 1:n, j in 1:n]
+            return B * Q
+        end
+
+        # Perform the multiplication
+        a_ii = T[i, i]
+        a_ii1 = T[i, i + 1]
+        a_i1i1 = T[i + 1, i + 1]
+
+        sd[i] = s * a_i1i1
+        T[i, i] = c * a_ii + s * a_ii1
+        T[i, i + 1] = -s * a_ii + c * a_ii1
+        T[i + 1, i + 1] = c * a_i1i1
+
+        if i > 1
+            a_i1i = T[i - 1, i]
+            a_i1i1 = T[i - 1, i + 1]
+            T[i - 1, i + 1] = 0 # We checked that this is zero in previous step
+            T[i - 1, i] = c * a_i1i + s * a_i1i1
         end
     end
-    if is_tridiagonal
-        return Tridiag([A[i+1, i] for i in 1:n-1], [A[i, i] for i in 1:n], [A[i, i+1] for i in 1:n-1])
-    else
-        return A
-    end
+    # If we reach here, we have a tridiagonal structure
+    return Tridiag(sd, T.gd, T.sd)
 end
 
 """

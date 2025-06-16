@@ -4,11 +4,14 @@ using LinearAlgebra
 using Statistics
 using Homework_1
 using Plots
+using Random
 
 possible_sizes = [10, 50, 100, 250, 500, 750, 1000]
 
 # Create a random symmetric tridiagonal matrix of size n*n
-function create_tridiagonal(n)
+function create_tridiagonal(n; seed=42)
+    Random.seed!(seed)  # Set seed for reproducibility
+    
     # Generate random diagonal and sub-diagonal elements
     diag = randn(n)  # Main diagonal
     sub_diag = randn(n - 1)  # Sub-diagonal (one less than main diagonal)

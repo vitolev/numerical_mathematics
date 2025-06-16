@@ -57,7 +57,7 @@
 Cilj te naloge je implementirati učinkovit QR razcep (simetrične) tridiagonalne matrike z Givensovimi rotacijami 
 in ga uporabiti pri QR iteraciji za izračun lastnih vrednosti in lastnih vektorjev simetrične tridiagonalne matrike.
 
-Da lahko to dosežemo, je najprej potrebno implementirati tipe \texttt{Tridiag}, ki predstavlja tridiagonalno matriko,
+Da to dosežemo, implementiramo naslednje tipe: \texttt{Tridiag}, ki predstavlja tridiagonalno matriko,
 \texttt{SimTridiag}, ki predstavlja simetrično tridiagonalno matriko, \texttt{Givens}, ki predstavlja matriko Givensovih rotacij in
 \texttt{ZgornjeTridiag}, ki predstavlja matriko z neničelnimi elementi na diagonali in dveh zgornjih diagonalah.
 
@@ -66,14 +66,15 @@ implementacija funkcije \texttt{eigen($T$)}, ki izračuna lastne vrednosti in la
 
 \section{Implementacija}
 Podatkovni tip \texttt{Tridiag} sprejme tri sezname in sicer seznam spodnje diagonale, seznam glavne diagonale in seznam zgornje diagonale.
-Tale podatkovni tip smo že implementirali na vajah, zato je koda povzeta iz vaj. Podatkovni tip \texttt{SimTridiag} je podobno definiran, le da sprejme dva seznama, seznam glavne diagonale in seznam pod-diagonale, 
+Koda za tale tip je povzeta iz vaj. Podatkovni tip \texttt{SimTridiag} je podobno definiran, le da sprejme dva seznama, seznam glavne diagonale in seznam pod-diagonale, 
 saj sta zgornja in spodnja diagonala enaka. Podatkovni tip \texttt{ZgornjeTridiag} je podoben, le da sprejme seznam glavne diagonale in dva seznama zgornjih diagonal.
 
 Do elementov vseh treh matrik lahko dostopamo z indeksi, kot pri običajni matriki, kar smo storili z implementacijo funkcij \texttt{getindex()}. Elemente matrik lahko tudi spreminjamo s funkcijo \texttt{setindex()},
 vendar to lahko naredimo le za elemente, ki so v matriki definirani. V nasprotnem primeru, bo program vrnil napako.
 
-Pomemben podatkovni tip, ki si zasluži bolj podroben opis je \texttt{Givens}. Ta podatkovni sprejme seznam 4-dimenzionalnih vektorjev. Prvi dve komponenti sta kosinus in sinus kota rotacije, medtem ko sta tretja in četrta komponenta
-indeksa stolpcev/vrstic, ki jih rotiramo. Za boljšo predstavo si poglejmo matrično reprezentacijo Givensove rotacije
+Pomemben podatkovni tip, ki si zasluži bolj podroben opis je \texttt{Givens}. Ta podatkovni sprejme seznam 4-dimenzionalnih vektorjev. Prvi dve komponenti sta kosinus $c$ in sinus $s$ kota rotacije, medtem ko sta tretja in četrta komponenta
+indeksa $i$ in $j$ stolpcev/vrstic, ki jih rotiramo. V našem problemu se $i$ in $j$ vedno pojavita kot zaporedni števili, kar nam olajša določena množenja, zato bi lahko poenostavili ta tip, vendar da ohranimo splošnost, smo ga implementirali tako. 
+Za boljšo predstavo si poglejmo matrično reprezentacijo Givensove rotacije
 \[
 G(c,s,i,j) =
 \begin{bmatrix}
@@ -88,16 +89,12 @@ G(c,s,i,j) =
 \]
 kjer se $c = \cos(\theta)$ in $s = \sin(\theta)$, kjer je $\theta$ kot rotacije, pojavita na presečišču $i$ in $j$-te vrstice in stolpca.
 
-Zadnji korak, ki ga moramo narediti preden se lotimo implementacije \texttt{qr($T$)}, je implementacija funkcije množenja med matrikami tipa \texttt{Givens} in \texttt{ZgornjeTridiag}. Ko bodisi z leve ali desne pomnožimo matriko tipa \texttt{ZgornjeTridiag}
-z matriko tipa \texttt{Givens}, ni nujno da je dobljena matrika tipa \texttt{ZgornjeTridiag}. Množenje teh dveh matrik smo zato implementirali tako, da smo matriko tipa \texttt{ZgornjeTridiag} najprej pretvorili v polno matriko ter
-nato izvedli množenje. Če je rezultat množenja tridiagonalna matrika, smo jo pretvorili v tip \texttt{Tridiag}, sicer pa smo jo pustili v polni obliki.
-
-Sedaj se lahko lotimo QR razcepa. V splošnem moramo eliminirati elemente pod glavno diagonalo. Ključno opažanje pri razcepu tridiagonalne matrike je, da so elementi potrebni eliminacije samo elementi spodnje diagonale.
+V splošnem moramo pri QR razcepu eliminirati elemente pod glavno diagonalo. Ključno opažanje pri razcepu tridiagonalne matrike je, da so elementi potrebni eliminacije samo elementi spodnje diagonale.
 To nam da motivacijo, da implementiramo funkcijo v časovni zahtevnosti $O(n)$, saj imamo samo $n-1$ elementov za eliminirati. Le-te lahko eliminiramo z uporabo Givensovih rotacij.
-Konkretno, če želimo eliminirati $a_{i+1,i}$ v matriki $A$, se ga lahko znebimo tako da pomnožimo $A$ iz leve z Givensovo rotacijo $G(c,s,i,i+1)$. Pri tem je potrebno izbrati ustrezen $c$ is $s$.
-Lahko se preveri, da je potreben kot rotacije enak $\theta = \arctan\left(\frac{a_{i+1,i}}{a_{i,i}}\right)$. Tako dobimo
+Konkretno, če želimo eliminirati $a_{i+1,i}$ v matriki $A$, se ga lahko znebimo tako, da pomnožimo $A$ iz leve z Givensovo rotacijo $G(c,s,i,i+1)$. Pri tem je potrebno izbrati ustrezen $c$ is $s$.
+Izkaže se, da je
 $$
-c = \cos(\theta) = \frac{a_{i,i}}{\sqrt{a_{i,i}^2 + a_{i+1,i}^2}}, \qquad s = \sin(\theta) = \frac{a_{i+1,i}}{\sqrt{a_{i,i}^2 + a_{i+1,i}^2}}.
+c = \frac{a_{i,i}}{\sqrt{a_{i,i}^2 + a_{i+1,i}^2}}, \qquad s = \frac{a_{i+1,i}}{\sqrt{a_{i,i}^2 + a_{i+1,i}^2}}.
 $$ 
 
 Ko pomnožimo $A$ z Givensovo rotacijo $G(c,s,i,i+1)$ smo s tem izničili $a_{i+1,i}$, spremenili elemente $a_{i,i}$, $a_{i+1,i+1}$, $a_{i,i+1}$ in $a_{i+1,i+2}$, ter ustvarili nov neničeln element $a_{i,i+2}$ (pod predpostavko da so vsi elementi spodnje diagonale pred $a_{i+1,i}$ že eliminirani). Ta novo nastali element je element zgornje druge nad-diagonale.
@@ -105,11 +102,17 @@ To pomeni, da celoten algoritem QR razcepa tridiagonalne matrike operira le na s
 Algoritem je tako preposto enojna zanka po vseh elementih spodnje diagonale, kjer za vsak element izračunamo ustrezno Givensovo rotacijo, posodobimo elemente po množenju in dodamo Givensovo rotacijo v seznam rotacij.
 Končen rezultat je tako matrika $R$ tipa \texttt{ZgornjeTridiag} in matrika $Q$ tipa \texttt{Givens}, ki je produkt vseh Givensovih rotacij, ki smo jih uporabili pri eliminaciji.
 
-Lastne vrednosti in lastne vektornje simetrične tridiagonalne matrike dobimo z uporabo QR iteracije. Algoritem QR iteracije je sledeč. Simetrično matriko $T$ razcepimo v produkt $T = QR$, z že implementirano funkcijo \texttt{qr($T$)}.
-Pri tem si shranimo matriko $Q$ in nato izračunamo $T = RQ$. Ta postopek ponavljamo poljubno število korakov. Elementi na diagonali matrike $T$ konvergirajo v lastne vrednosti, medtem ko so pripadajoči lastni vektorji stolpci matrike dobljene kot produkt vseh matrik $Q$.
+Za QR iteracijo potrebujemo funkcijo množenja med matrikami tipa \texttt{Givens} in \texttt{ZgornjeTridiag}. Ko bodisi z leve ali desne pomnožimo matriko tipa \texttt{ZgornjeTridiag}
+z matriko tipa \texttt{Givens}, v splošnem ni nujno, da je dobljena matrika v obliki katerega od definiranih tipov. S QR razcepom tridiagonalne matrike dobimo matriko $R$ tipa \texttt{ZgornjeTridiag} in matriko $Q$ tipa \texttt{Givens}, torej je v našem
+primeru produkt $QR$ matrika tipa \texttt{Tridiag}. Izkaže se, da je ob QR razcepu simetrične tridiagonalne matrike produkt $RQ$ prav tako matrika tipa \texttt{SimTridiag}. Množenje med matrikami tipa \texttt{Givens} in \texttt{ZgornjeTridiag} je zato implementirano tako,
+da se privzame, da je rezultat množenja matrika tipa \texttt{Tridiag}. Da se ohrani splošnost implementacije tudi v primeru, ko rezultat ni matrika tipa \texttt{Tridiag}, se med množenjem preveri, ali so kateri elementi izven stranskih diagonal neničelni.
+V tem primeru se zgornje tridiagonalna matrika pretvori v polno matriko in se nato izvede množenje.
+
+Lastne vrednosti in lastne vektornje simetrične tridiagonalne matrike dobimo z uporabo QR iteracije. Algoritem QR iteracije je sledeč. Simetrično tridiagonalno matriko $T$ razcepimo v produkt $T = QR$, z že implementirano funkcijo \texttt{qr($T$)}.
+Pri tem si shranimo matriko $Q$ in nato izračunamo $T = RQ$, ki je ponovno simetrično tridiagonalna. Ta postopek ponavljamo poljubno število korakov. Elementi na diagonali matrike $T$ konvergirajo v lastne vrednosti, medtem ko so pripadajoči lastni vektorji stolpci matrike dobljene kot produkt vseh matrik $Q$.
 
 \section{Rezultati}
-Primerjali smo QR razcep simetrične tridiagonalne matrike različnih velikosti z QR razcepom iz knjižice \texttt{LinearAlgebra}, ki operira na polni matriki. Rezultati so prizakani na sliki \ref{fig:qr_comparison}.
+Primerjamo QR razcep simetrične tridiagonalne matrike različnih velikosti z QR razcepom iz knjižice \texttt{LinearAlgebra}, ki operira na polni matriki. Rezultati so prizakani na sliki \ref{fig:qr_comparison}.
 \begin{figure}[ht]
     \centering
     \includegraphics[width=0.7\textwidth]{figures/qr_performance_comparison.png}
@@ -129,7 +132,7 @@ T = \begin{bmatrix}
 \end{bmatrix}.
 $$
 Analitična rešitev lastnih vrednosti te matrike so $\lambda_1 = 2 + \sqrt{7} \approx 4.6457513110645906$, $\lambda_2 = 3$ in $\lambda_3 = 2 - \sqrt{7} \approx -0.6457513110645906$.
-Izvedemo QR iteracijo z $25$ koraki in dobimo lastne vrednosti $\lambda_1 \approx 4.645751289681215$, $\lambda_2 \approx 3.0000000213833773$ in $\lambda_3 \approx -0.645751311064591$.
+Izvedemo QR iteracijo s $25$ koraki in dobimo lastne vrednosti $\lambda_1 \approx 4.645751289681215$, $\lambda_2 \approx 3.0000000213833773$ in $\lambda_3 \approx -0.645751311064591$.
 Vidimo, da so lastne vrednosti zelo blizu analitičnim rešitvam, kljub majhnemu številu iteracij, kar pomeni, da QR iteracija zelo hitro konvergira. Na sliki \ref{fig:qr_iteration} je prikazana konvergenca lastnih vrednosti v odvisnosti od števila iteracij.
 \begin{figure}[ht]
     \centering

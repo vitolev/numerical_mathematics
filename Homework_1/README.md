@@ -1,6 +1,6 @@
 # 1. Domača naloga
 ## QR razcep simetrične tridiagonalne matrike
-Prva domača naloga je bila *QR razcep simetrične tridiagonalne matrike*, kjer je bil cilj implementacija algoritma za QR razcep in njegova uporaba pri QR iteraciji za določitev lastnih vrednosti in lastnih vektorjev.
+Cilj prve domače naloge je implementacija algoritma za QR razcep in njegova uporaba pri QR iteraciji za določitev lastnih vrednosti in lastnih vektorjev.
 
 ## Struktura projekta
 Naloga je implmentirana kot paket za programski jezik Julia in je razdeljena v naslenje podmape:
