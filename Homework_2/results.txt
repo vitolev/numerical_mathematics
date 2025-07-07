@@ -1,0 +1,8 @@
+Computing the force vector from cube 2 to cube 1 using Simpson's 2D method...
+Initial Simpson's 2D estimated force vector from cube 2 to cube 1: -0.2479229691662903
+Time taken for initial computation: 1489.2825815 seconds
+
+Increasing number of points in each dimension to: 200002
+Current relative error: 6.763146264677682e-11        
+Current estimated force vector: -0.2479229691830577  
+Time taken for this computation: 1571.6040189 seconds
