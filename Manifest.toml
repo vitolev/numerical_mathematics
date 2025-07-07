@@ -8,3 +8,8 @@ project_hash = "66a1ec08208c5b123f4b4efd38b4856f9920b84f"
 path = "Homework_1"
 uuid = "87c93f9b-a107-472b-b986-da2042228998"
 version = "0.1.0"
+
+[[deps.Homework_3]]
+path = "Homework_3"
+uuid = "d272c80f-e28c-48c8-bdb0-4032e7187545"
+version = "0.1.0"
