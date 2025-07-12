@@ -59,6 +59,7 @@ end
 function rk4_method(X0, mu, dt, n_steps; check_collision=false)
     X = X0
     trajectory = [X]
+    min_dist_m = 10e6  # Large initial value
     for i in 1:n_steps
         X = rk4_step(X, mu, dt)
         if check_collision
@@ -68,10 +69,13 @@ function rk4_method(X0, mu, dt, n_steps; check_collision=false)
                 println("Collision detected at step $i: R = $R, r = $r")
                 break
             end
+            if r < min_dist_m
+                min_dist_m = r
+            end
         end
         push!(trajectory, X)
     end
-    return trajectory
+    return trajectory, min_dist_m * 384400
 end
 
 
