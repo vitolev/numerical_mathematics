@@ -80,7 +80,7 @@ kjer je $f(t, X)$ funkcija, ki vrača odvod vektorja stanja $X$ ob času $t$ in 
 če je plovilo trčilo v Luno ali Zemljo in predčasno konča simulacijo, če je prišlo do trka. Za Zemljo in Luno smo privzeli, da sta popolni krogli z radijema $R_Z = 6400 \text{ km}$ in $R_L = 1700 \text{ km}$.
 
 Najtežji del naloge je izbor začetnih vrednosti, saj želimo najti orbite z vrnitvijo brez potiska, kar se zgodi le v redkih primerih.
-Na sliki \ref{fig:theory_orbits} so prikazane orbite, dobljene iz literature, ki jih želimo v tej nalogi reproducirati.
+Na sliki \ref{fig:theory_orbits} so prikazane orbite, dobljene iz literature \cite{XIYUN2013183}, ki jih želimo v tej nalogi reproducirati.
 \begin{figure}[h]
     \centering
     \begin{subfigure}[b]{0.45\textwidth}
@@ -113,7 +113,7 @@ Na sliki \ref{fig:theory_orbits} so prikazane orbite, dobljene iz literature, ki
         \label{fig:orbit_4}
     \end{subfigure}
 
-    \caption{Orbite, dobljene iz literature.}
+    \caption{Orbite, dobljene iz literature \cite{XIYUN2013183}.}
     \label{fig:theory_orbits}
 \end{figure}
 
@@ -236,5 +236,7 @@ Iz rezultatov lahko razberemo, da že majhne spremembe v začetnih pogojih bistv
     \end{tabular}
 \end{table}
 
+\bibliographystyle{unsrt}   % You can use other styles like alpha, ieeetr, apalike, etc.
+\bibliography{references}   % Don't include the .bib extension
 
 \end{document}
