@@ -81,7 +81,20 @@ kjer je $f(t, X)$ funkcija, ki vrača odvod vektorja stanja $X$ ob času $t$ in 
 
 Najtežji del naloge je izbor začetnih vrednosti, saj želimo najti orbite z vrnitvijo brez potiska, kar se zgodi le v redkih primerih.
 Na sliki \ref{fig:theory_orbits} so prikazane orbite, dobljene iz literature \cite{XIYUN2013183}, ki jih želimo v tej nalogi reproducirati.
-\begin{figure}[h]
+
+\section{Rezultati}
+Tekom simulacij se omejimo na gibanje v $xy$ ravnini. Takšna obravnava je smiselna za majhne odmike $z$.
+Za majhne odmike $z$ sta $R$ in $r$ funkciji le $x$ in $y$, torej lahko pišemo
+$$
+\ddot{z} = - a^2 \cdot z,
+$$
+kjer definiramo $a^2 = \frac{1 - \mu}{R^3} + \frac{\mu}{r^3}$. Dobimo enačbo harmoničnega nihanja, katere rešitev je
+$$
+z(t) = A \cos(at) + B \sin(at),
+$$
+kjer sta $A$ in $B$ konstanti, določeni iz začetnih pogojev. Gibanje v $z$ komponenti bo tako podobno harmoničnemu nihanju, ki se mu sproti spreminja frekvenca nihanja. 
+
+\begin{figure}[H]
     \centering
     \begin{subfigure}[b]{0.45\textwidth}
         \centering
@@ -117,22 +130,14 @@ Na sliki \ref{fig:theory_orbits} so prikazane orbite, dobljene iz literature \ci
     \label{fig:theory_orbits}
 \end{figure}
 
-\section{Rezultati}
-Tekom simulacij se omejimo na gibanje v $xy$ ravnini. Takšna obravnava je smiselna za majhne odmike $z$.
-Za majhne odmike $z$ sta $R$ in $r$ funkciji le $x$ in $y$, torej lahko pišemo
-$$
-\ddot{z} = - a^2 \cdot z,
-$$
-kjer definiramo $a^2 = \frac{1 - \mu}{R^3} + \frac{\mu}{r^3}$. Dobimo enačbo harmoničnega nihanja, katere rešitev je
-$$
-z(t) = A \cos(at) + B \sin(at),
-$$
-kjer sta $A$ in $B$ konstanti, določeni iz začetnih pogojev. Gibanje v $z$ komponenti bo tako podobno harmoničnemu nihanju, ki se mu sproti spreminja frekvenca nihanja. 
 
 Veliko vesoljskih plovil je izstreljenih iz nižje Zemljine orbite (Low Earth Orbit), zato smo privzeli, da je plovilo izsteljeno iz višine $200 \text{ km}$ nad površjem. Vektor hitrosti plovila je v tem trenutku pravokoten na vektor pozicije, relativno na središče Zemlje. Iskanje ustreznih začetnih pogojev
 je tako omejeno na iskanje začetnega kota $\alpha$ (merjen od zveznice med Zemljo in Luno v pozitivni smeri) in velikosti hitrosti plovila $v_0$. S poiskušanjem različnih kombinacij smo našli željene štiri orbite. Pri tem smo želeli doseči, da se plovilo med letom čimbolj približa Luni, za katero smo vzeli, da ima polmer $1700 \text{ km}$. Parametri začetnih pogojev
 so prikazani v tabeli \ref{tab:initial_conditions}.
-\begin{table}[h]
+Enote za hitrost v tabeli \ref{tab:initial_conditions} so brezdimenzijske. Razdalja med Zemljo in Luno je v brezdimenzijskih enotah 1, kar ustreza približno $384400 \text{ km}$. Podobno je kotna hitrost vrtenja sistema enaka 1. 
+Ko uporabimo dejstvo, da je perioda vrtenja Lune okoli Zemlje približno $2.36 \cdot 10^6 \text{ s}$, dobimo, da je brezdimenzijska enota hitrosti enaka $1.023 \text{ km/s}$.
+Da dobimo hitrosti v realnih enotah, moramo brezdimenzijske hitrosti pomnožiti s to vrednostjo.
+\begin{table}[H]
     \centering
     \begin{tabular}{|c|c|c|c|c|}
         \hline
@@ -147,9 +152,6 @@ so prikazani v tabeli \ref{tab:initial_conditions}.
     \caption{Začetni pogoji za iskane štiri orbite, minimalna dobljena razdalja do Lune med simulacijo in čas potovanja. Enote za hitrost so brezdimenzijske.}
     \label{tab:initial_conditions}
 \end{table}
-Enote za hitrost v tabeli \ref{tab:initial_conditions} so brezdimenzijske. Razdalja med Zemljo in Luno je v brezdimenzijskih enotah 1, kar ustreza približno $384400 \text{ km}$. Podobno je kotna hitrost vrtenja sistema enaka 1. 
-Ko uporabimo dejstvo, da je perioda vrtenja Lune okoli Zemlje približno $2.36 \cdot 10^6 \text{ s}$, dobimo, da je brezdimenzijska enota hitrosti enaka $1.023 \text{ km/s}$.
-Da dobimo hitrosti v realnih enotah, moramo brezdimenzijske hitrosti pomnožiti s to vrednostjo.
 
 Na sliki \ref{fig:orbits} so prikazane orbite, dobljene z uporabo začetnih pogojev iz tabele \ref{tab:initial_conditions} in z uporabo časovnega koraka $h = 10^{-6}$.
 \begin{figure}[h]
